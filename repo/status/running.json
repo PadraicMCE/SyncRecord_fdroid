@@ -1,0 +1,21 @@
+{
+  "/etc/issue.net": "Ubuntu 24.04.4 LTS",
+  "commandLine": [
+    "/usr/bin/fdroid build",
+    "com.mcevoy.syncrecordapp",
+    "--verbose"
+  ],
+  "fdroiddata": {
+    "commitId": "264dac19cc619b649fd52660d1049cce43f2d8d6",
+    "isDirty": false,
+    "modifiedFiles": [],
+    "untrackedFiles": [
+      "config.yml",
+      "keystore.p12",
+      "metadata/com.mcevoy.syncrecordapp.yml",
+      "repo/status/running.json"
+    ]
+  },
+  "startTimestamp": 1780597374000,
+  "subcommand": "build"
+}
