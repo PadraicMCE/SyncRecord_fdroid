@@ -2,11 +2,17 @@ Categories:
   - Multimedia
 License: MIT
 AuthorName: Padraic McEvoy
+SourceCode: https://github.com/PadraicMCE/SyncRecord_fdroid
+RepoType: git
+Repo: https://github.com/PadraicMCE/SyncRecord_fdroid
+
+CurrentVersion: 1.0.0
+CurrentVersionCode: 1
+
 Builds:
-  - versionName: '1.0.0'
+  - versionName: 1.0.0
     versionCode: 1
-    commit: '44d44b552812c004a09d11055386a436bac50f32'
-    subdir: .
+    commit: 70794ca472359e3a850e919b1de218abb2365238
     gradle:
-      - assemble
+      - assembleDebug
     output: app/build/outputs/apk/debug/app-debug.apk
