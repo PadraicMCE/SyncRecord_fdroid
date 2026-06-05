@@ -14,5 +14,4 @@ Builds:
     versionCode: 1
     commit: b2657da643edd4566a3f8e9f487119b4c6470b9a
     gradle:
-      - assembleDebug
-    output: app/build/outputs/apk/debug/app-debug.apk
+      - full
