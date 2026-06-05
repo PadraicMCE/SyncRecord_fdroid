@@ -1,4 +1,4 @@
-package com.mcevoy.syncrecordapp
+package app.mcevoy.syncrecordapp
 
 import android.view.LayoutInflater
 import android.view.View

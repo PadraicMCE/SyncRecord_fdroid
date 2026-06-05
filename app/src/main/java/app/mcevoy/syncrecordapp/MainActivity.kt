@@ -1,14 +1,9 @@
-package com.mcevoy.syncrecordapp
+package app.mcevoy.syncrecordapp
 //TODO: Disable buttons when socket connection with host is lost.
 import android.Manifest
 import android.app.DownloadManager
-import android.content.ContentValues
-import android.content.ContentValues.TAG
-import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.content.res.Resources
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
@@ -16,7 +11,6 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.media.AudioTrack
 import android.os.Bundle
-import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -34,24 +28,18 @@ import android.net.Uri
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
-import android.provider.ContactsContract
-import android.provider.MediaStore
-import android.provider.MediaStore.Audio
 import android.util.Log
-import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.View
 import android.view.WindowManager
 import android.widget.ImageButton
 import android.widget.PopupMenu
 import androidx.appcompat.app.AlertDialog
+import io.socket.client.IO
 //import androidx.privacysandbox.tools.core.generator.build
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 // To allow self-signed certificates used on local servers
@@ -59,12 +47,12 @@ import okhttp3.OkHttpClient
 import java.io.InputStream
 import java.net.URI
 import java.security.KeyStore
+import java.security.MessageDigest
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
-import okhttp3.Request
 
 // Request device microphone
 const val REQUEST_CODE_MIC = 200
@@ -153,7 +141,7 @@ class MainActivity : AppCompatActivity(), SocketManagerCallback, SettingsDialogF
         // Keep the screen on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         // Get and load stored preferences
-        sharedPreferences = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        sharedPreferences = getSharedPreferences("app_settings", MODE_PRIVATE)
 
         loadSettingsFromSharedPreferences()
 
@@ -291,7 +279,7 @@ class MainActivity : AppCompatActivity(), SocketManagerCallback, SettingsDialogF
     private fun initSocketManager(serverType: ServerType, address: String?) {
         val baseUrl: String // Declared within this function's scope
         val okHttpClientBuilder = OkHttpClient.Builder()
-        val opts = io.socket.client.IO.Options() // Declared within this function's scope
+        val opts = IO.Options() // Declared within this function's scope
         opts.forceNew = true
         opts.reconnection = true
 
@@ -608,7 +596,7 @@ class MainActivity : AppCompatActivity(), SocketManagerCallback, SettingsDialogF
     }
 
     //Options menu
-    private fun showPopupMenu(view: android.view.View) {
+    private fun showPopupMenu(view: View) {
         val popup = PopupMenu(this, view)
         val inflater: MenuInflater = popup.menuInflater
         inflater.inflate(R.menu.options_menu, popup.menu) // R.menu.options_menu
@@ -645,7 +633,7 @@ class MainActivity : AppCompatActivity(), SocketManagerCallback, SettingsDialogF
             permissionGranted = grantResults[0] == PackageManager.PERMISSION_GRANTED
     }
     private fun checkUnprocessedAudioSupport(){
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         val isUnprocessedAudioSupported = audioManager.getProperty(AudioManager.PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED)
 
         if (isUnprocessedAudioSupported != null && isUnprocessedAudioSupported == "true") {
@@ -967,7 +955,7 @@ class MainActivity : AppCompatActivity(), SocketManagerCallback, SettingsDialogF
     // Helper to extract SHA-256 fingerprint (unchanged)
     private fun extractCertFingerprint(cert: X509Certificate): String {
         return try {
-            val md = java.security.MessageDigest.getInstance("SHA-256")
+            val md = MessageDigest.getInstance("SHA-256")
             val publicKeyBytes = cert.encoded
             val digest = md.digest(publicKeyBytes)
             digest.joinToString(":") { "%02x".format(it) }
@@ -990,7 +978,7 @@ class MainActivity : AppCompatActivity(), SocketManagerCallback, SettingsDialogF
             // Force the MIME type specifically to ZIP since you know the file type
             request.setMimeType("application/zip")
 
-            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
             downloadManager.enqueue(request)
 
             runOnUiThread {

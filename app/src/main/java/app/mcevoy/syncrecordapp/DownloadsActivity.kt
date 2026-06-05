@@ -1,9 +1,8 @@
 // DownloadsActivity.kt
-package com.mcevoy.syncrecordapp
+package app.mcevoy.syncrecordapp
 
 import android.Manifest
 import android.content.ContentValues
-import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -25,10 +24,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okio.buffer
 import okio.sink
-import org.json.JSONException
-import org.json.JSONObject // Import for parsing JSON from Socket.IO
 
 
 class DownloadsActivity : AppCompatActivity() {
