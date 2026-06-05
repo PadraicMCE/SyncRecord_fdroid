@@ -12,7 +12,7 @@ CurrentVersionCode: 1
 Builds:
   - versionName: 1.0.0
     versionCode: 1
-    commit: 30227c4d6a1e23ff4b731536bd35dc0ee4257f0b
+    commit: 9c358eed44b2907fdbd0b0d90937405d7919873f
     gradle:
       - assembleDebug
     output: app/build/outputs/apk/debug/app-debug.apk
