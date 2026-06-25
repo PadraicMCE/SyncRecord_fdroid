@@ -36,8 +36,8 @@ import android.view.WindowManager
 import android.widget.ImageButton
 import android.widget.PopupMenu
 import androidx.appcompat.app.AlertDialog
-import io.socket.client.IO
 //import androidx.privacysandbox.tools.core.generator.build
+import io.socket.client.IO
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -47,12 +47,12 @@ import okhttp3.OkHttpClient
 import java.io.InputStream
 import java.net.URI
 import java.security.KeyStore
-import java.security.MessageDigest
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
+import java.security.MessageDigest
 
 // Request device microphone
 const val REQUEST_CODE_MIC = 200
@@ -836,22 +836,29 @@ class MainActivity : AppCompatActivity(), SocketManagerCallback, SettingsDialogF
         initSocketManager(currentServerType,currentSocketAddress)
     }
 
+    private var activeAudioTrack: AudioTrack? = null
     private fun playBinaryAudio(onCompletion: () -> Unit) {
         val sampleRate = 48000;
         val channelConfig = AudioFormat.CHANNEL_OUT_MONO;
         val audioFormat = AudioFormat.ENCODING_PCM_16BIT;
         try {
+            // Stop and release any existing playback immediately to prevent any overlapping
+            activeAudioTrack?.let {
+                try {
+                    if (it.playState == AudioTrack.PLAYSTATE_PLAYING) {
+                        it.stop()
+                    }
+                } catch (e: Exception) { /* Ignore if already stopped */
+                }
+                it.release()
+            }
             val inputStream = resources.openRawResource(R.raw.prbs1_3_delta)
             val audioData = inputStream.readBytes()
             inputStream.close()
             //Calculate minimum buffer size
             val buffersize = audioData.size //* 2
             //val buffersize = AudioTrack.getMinBufferSize(sampleRate, channelConfig, audioFormat)
-            /*
-            runOnUiThread {
-                debugText.text = "Buffer size: " + buffersize.toString() + "  Audio data: " + audioData.size.toString()
-            }
-            */
+
             //Create and configure AudioTrack
             val audioTrack = AudioTrack.Builder()
                 .setAudioAttributes(
@@ -869,13 +876,22 @@ class MainActivity : AppCompatActivity(), SocketManagerCallback, SettingsDialogF
                 .setTransferMode(AudioTrack.MODE_STATIC)
                 .build()
             //Write audio data to the AudioTrack
+            activeAudioTrack = audioTrack
             audioTrack.write(audioData,0,audioData.size)
             //Set up listener to trigger a command when playback finished
-            //audioTrack.setNotificationMarkerPosition(audioData.size / (16 / 8))
-            //TODO: Change
-            audioTrack.setNotificationMarkerPosition(765)
+            val totalFrames = audioData.size / 2
+            audioTrack.setNotificationMarkerPosition(totalFrames)
             audioTrack.setPlaybackPositionUpdateListener(object : AudioTrack.OnPlaybackPositionUpdateListener {
                 override fun onMarkerReached(track: AudioTrack?) {
+                    try {
+                        track?.stop()
+                        track?.release()
+                    } catch (e: Exception) {
+                        Log.e("AudioPlayback", "Error releasing track on marker: ${e.message}")
+                    }
+                    if (activeAudioTrack == track) {
+                        activeAudioTrack = null
+                    }
                     // Run onCompletion() command
                     onCompletion()
                 }
@@ -884,31 +900,10 @@ class MainActivity : AppCompatActivity(), SocketManagerCallback, SettingsDialogF
                     // Optional: monitor playback periodically (if needed)
                 }
             })
-
-            /*
-            audioTrack.setPlaybackPositionUpdateListener(object : AudioTrack.OnPlaybackPositionUpdateListener {
-                override fun onMarkerReached(track: AudioTrack?) {
-                    //Run onCompletion() command
-                    onCompletion()
-                }
-                override fun onPeriodicNotification(track: AudioTrack?) {
-                    //Needed?
-                }
-            })
-            */
             //Set the volume 0.0 = min; 1.0 = max
             audioTrack.setVolume(1.0f)
             //Play the audio
             audioTrack.play()
-            //val durationInSeconds = audioData.size / (sampleRate * 2.0) // In seconds, assuming 16-bit audio
-            CoroutineScope(Dispatchers.IO).launch {
-                //wait for playback duration
-                delay(50L)
-                //delay((durationInSeconds * 1000).toLong())  // Convert to milliseconds
-                //delay(((audioData.size.toDouble() / (sampleRate * 2 * 1)) * 1000).toLong())
-                //delay(audioData.size/(sampleRate*2.0).toLong()*1000)
-                audioTrack.release()
-            }
         } catch (e: Exception) {
             e.printStackTrace()
             Log.e("AudioPlayback", "Error occurred during playback: ${e.message}")
